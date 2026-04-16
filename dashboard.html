@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            color: white;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-form">
+        <div class="card">
+            <h1>Employee Management</h1>
+            <div id="loginError" class="error hidden"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" value="admin@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" value="AdminPassword123" required>
+                </div>
+                <button type="submit" style="width: 100%;">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="container hidden">
+        <div class="header">
+            <h1 style="color: white;">Employee Management Dashboard</h1>
+            <div class="user-info">
+                <span id="userName"></span> | 
+                <button onclick="logout()" class="secondary">Logout</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Employees</h2>
+                <button onclick="openAddModal()">+ Add Employee</button>
+            </div>
+            
+            <div id="employeeList"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Employee</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalError" class="error hidden"></div>
+            <form id="employeeForm">
+                <input type="hidden" id="employeeId">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Department *</label>
+                    <input type="text" id="department" required>
+                </div>
+                <div class="form-group">
+                    <label>Position *</label>
+                    <input type="text" id="position" required>
+                </div>
+                <div class="form-group">
+                    <label>Job Title *</label>
+                    <input type="text" id="jobTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Salary *</label>
+                    <input type="number" id="salary" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Joining *</label>
+                    <input type="date" id="dateOfJoining" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" style="flex: 1;">Save</button>
+                    <button type="button" onclick="closeModal()" class="secondary" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let token = null;
+        let currentUser = null;
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) throw new Error('Invalid credentials');
+
+                const data = await response.json();
+                token = data.token;
+                currentUser = data.user;
+
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('userName').textContent = currentUser.name;
+
+                loadEmployees();
+            } catch (error) {
+                showError('loginError', error.message);
+            }
+        });
+
+        // Logout
+        function logout() {
+            token = null;
+            currentUser = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Load Employees
+        async function loadEmployees() {
+            try {
+                const response = await fetch(`${API_BASE}/employees`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load employees');
+
+                const data = await response.json();
+                displayEmployees(data.content || []);
+            } catch (error) {
+                document.getElementById('employeeList').innerHTML = 
+                    `<div class="error">Failed to load employees: ${error.message}</div>`;
+            }
+        }
+
+        // Display Employees
+        function displayEmployees(employees) {
+            if (employees.length === 0) {
+                document.getElementById('employeeList').innerHTML = 
+                    '<div class="empty-state">No employees found. Click "Add Employee" to get started.</div>';
+                return;
+            }
+
+            const table = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th>Salary</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${employees.map(emp => `
+                            <tr>
+                                <td>${emp.firstName} ${emp.lastName}</td>
+                                <td>${emp.email}</td>
+                                <td>${emp.department}</td>
+                                <td>${emp.position}</td>
+                                <td>$${emp.salary.toLocaleString()}</td>
+                                <td class="actions">
+                                    <button onclick="editEmployee(${emp.id})">Edit</button>
+                                    <button onclick="deleteEmployee(${emp.id})" class="danger">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('employeeList').innerHTML = table;
+        }
+
+        // Open Add Modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Employee';
+            document.getElementById('employeeForm').reset();
+            document.getElementById('employeeId').value = '';
+            document.getElementById('employeeModal').style.display = 'block';
+        }
+
+        // Edit Employee
+        async function editEmployee(id) {
+            try {
+                const response = await fetch(`${API_BASE}/employees/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load employee');
+
+                const emp = await response.json();
+                document.getElementById('modalTitle').textContent = 'Edit Employee';
+                document.getElementById('employeeId').value = emp.id;
+                document.getElementById('firstName').value = emp.firstName;
+                document.getElementById('lastName').value = emp.lastName;
+                document.getElementById('email').value = emp.email;
+                document.getElementById('department').value = emp.department;
+                document.getElementById('position').value = emp.position;
+                document.getElementById('jobTitle').value = emp.jobTitle;
+                document.getElementById('salary').value = emp.salary;
+                document.getElementById('dateOfJoining').value = emp.dateOfJoining;
+                document.getElementById('employeeModal').style.display = 'block';
+            } catch (error) {
+                alert('Failed to load employee: ' + error.message);
+            }
+        }
+
+        // Save Employee
+        document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('employeeId').value;
+            const data = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                department: document.getElementById('department').value,
+                position: document.getElementById('position').value,
+                jobTitle: document.getElementById('jobTitle').value,
+                salary: parseFloat(document.getElementById('salary').value),
+                dateOfJoining: document.getElementById('dateOfJoining').value
+            };
+
+            try {
+                const url = id ? `${API_BASE}/employees/${id}` : `${API_BASE}/employees`;
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to save employee');
+                }
+
+                closeModal();
+                loadEmployees();
+            } catch (error) {
+                showError('modalError', error.message);
+            }
+        });
+
+        // Delete Employee
+        async function deleteEmployee(id) {
+            if (!confirm('Are you sure you want to delete this employee?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/employees/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete employee');
+
+                loadEmployees();
+            } catch (error) {
+                alert('Failed to delete employee: ' + error.message);
+            }
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('employeeModal').style.display = 'none';
+            document.getElementById('modalError').classList.add('hidden');
+        }
+
+        // Show Error
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+            setTimeout(() => errorEl.classList.add('hidden'), 5000);
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('employeeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

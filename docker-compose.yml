@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: employee-management-mysql
+    environment:
+      MYSQL_DATABASE: employee_management
+      MYSQL_USER: employee_user
+      MYSQL_PASSWORD: employee_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: employee-management-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/employee_management?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: employee_user
+      DB_PASSWORD: employee_password
+      JWT_SECRET: replace-this-with-a-production-grade-secret-key-12345
+      APP_BOOTSTRAP_ADMIN_ENABLED: "true"
+      APP_BOOTSTRAP_ADMIN_NAME: System Admin
+      APP_BOOTSTRAP_ADMIN_EMAIL: admin@example.com
+      APP_BOOTSTRAP_ADMIN_PASSWORD: AdminPassword123
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql-data:
